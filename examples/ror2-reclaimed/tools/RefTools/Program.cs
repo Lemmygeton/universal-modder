@@ -8,8 +8,9 @@
 //   apicheck <MMHOOK_RoR2.dll> <latest-ref-dll-dir> <our.dll>...
 //       Binary-compatibility check against the CURRENT game. MMHOOK_RoR2 is generated from the live
 //       Assembly-CSharp/RoR2.dll, so every hookable method has an orig_ delegate carrying its exact signature.
-//       Every method/ctor/property our DLLs call on a RoR2 type is checked against it; fields are checked
-//       against field references made by assemblies built for the current game (R2API, RoR2BepInExPack).
+//       Every method/ctor/property our DLLs call on a RoR2 type is checked against it; fields, and methods
+//       MMHOOK cannot hook (property accessors, event add/remove, interface members), are checked against
+//       member references made by assemblies built for the current game (R2API, RoR2BepInExPack).
 //       Exit code 1 if anything is missing or has a different signature.
 //
 //   dump-refs <dll>...
@@ -126,8 +127,9 @@ static class ApiCheck
                 CollectNested(nt, target, sigs);
         }
 
-        // Field facts from assemblies compiled against the current game.
+        // Field and method facts from assemblies compiled against the current game.
         var latestFields = new Dictionary<string, string>();
+        var latestMethods = new HashSet<string>();
         foreach (var dll in Directory.EnumerateFiles(latestDir, "*.dll", SearchOption.AllDirectories))
         {
             if (Path.GetFileName(dll).StartsWith("MMHOOK")) continue;
@@ -137,11 +139,14 @@ static class ApiCheck
                 foreach (var fr in m.GetMemberReferences().OfType<FieldReference>())
                     if (Program.IsGameScope(fr.DeclaringType.Scope?.Name ?? ""))
                         latestFields[Key(fr.DeclaringType) + "::" + fr.Name] = Norm(fr.FieldType);
+                foreach (var mref in m.GetMemberReferences().OfType<MethodReference>())
+                    if (Program.IsGameScope(mref.DeclaringType.Scope?.Name ?? "") && !(mref is GenericInstanceMethod))
+                        latestMethods.Add(MethodKey(mref));
             }
             catch { }
         }
 
-        int bad = 0, ok = 0, unverified = 0;
+        int bad = 0, ok = 0, okByRef = 0, unverified = 0;
         var unverifiedList = new SortedSet<string>();
         foreach (var path in ours)
         {
@@ -163,12 +168,17 @@ static class ApiCheck
                 if (mr is not MethodReference meth) continue;
                 if (mr.DeclaringType is GenericInstanceType || meth is GenericInstanceMethod || meth.HasGenericParameters)
                 { unverified++; unverifiedList.Add($"generic {owner}::{meth.Name}"); continue; }
+                bool referencedByLatest = latestMethods.Contains(MethodKey(meth));
                 if (!sigs.TryGetValue(owner, out var list))
-                { unverified++; unverifiedList.Add($"type   {owner} (no hookable methods in MMHOOK: interface/enum/abstract or removed)  ::{meth.Name}"); continue; }
+                {
+                    if (referencedByLatest) { okByRef++; continue; }
+                    unverified++; unverifiedList.Add($"type   {owner} (no hookable methods in MMHOOK: interface/enum/abstract or removed)  ::{meth.Name}"); continue;
+                }
                 var name = meth.Name == ".ctor" ? "ctor" : meth.Name;
                 var ps = meth.Parameters.Select(p => Norm(p.ParameterType)).ToArray();
                 var cands = list.Where(c => c.name == name || c.name.StartsWith(name + "_", StringComparison.Ordinal)).ToList();
                 if (cands.Any(c => c.ps.SequenceEqual(ps) && (name == "ctor" || c.ret == Norm(meth.ReturnType)))) { ok++; continue; }
+                if (cands.Count == 0 && referencedByLatest) { okByRef++; continue; }
                 if (cands.Count == 0)
                 {
                     // abstract / extern / interface members are not hookable; only flag when the type has no such name at all
@@ -180,7 +190,7 @@ static class ApiCheck
                 foreach (var c in cands) Console.WriteLine($"         game has {c.name}({string.Join(", ", c.ps)}) : {c.ret}");
             }
         }
-        Console.WriteLine($"apicheck: {ok} verified, {bad} broken, {unverified} not verifiable from MMHOOK");
+        Console.WriteLine($"apicheck: {ok + okByRef} verified ({okByRef} via current-game references), {bad} broken, {unverified} not verifiable from MMHOOK");
         foreach (var u in unverifiedList) Console.WriteLine("  ? " + u);
         return bad == 0 ? 0 : 1;
     }
@@ -204,6 +214,9 @@ static class ApiCheck
     }
 
     static string Key(TypeReference t) => t.FullName.Replace('/', '/');
+
+    static string MethodKey(MethodReference m) =>
+        $"{Key(m.DeclaringType)}::{m.Name}({string.Join(",", m.Parameters.Select(p => Norm(p.ParameterType)))}):{Norm(m.ReturnType)}";
 
     // Normalise a type name so MMHOOK's view and ours compare equal.
     static string Norm(TypeReference t)

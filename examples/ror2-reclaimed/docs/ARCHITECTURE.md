@@ -54,8 +54,9 @@ plugin only talks to Core through the public API below and never to another surv
   or `fetch_refs.py --game ... --bepinex ...` (the user's own install).
 - `dotnet tools/RefTools/bin/Release/net8.0/RefTools.dll apicheck refs/mmhook/MMHOOK_RoR2.dll refs src/*/bin/Release/*.dll`
   checks every method/ctor/property we call on a RoR2 type against the live game's signatures
-  (MMHOOK_RoR2 is regenerated for each patch), and fields against field references of R2API /
-  RoR2BepInExPack builds for the live game. It must report 0 broken.
+  (MMHOOK_RoR2 is regenerated for each patch), and fields plus non-hookable methods (property accessors,
+  events, interface members) against member references of R2API / RoR2BepInExPack builds for the live game.
+  It must report 0 broken.
 - Code that touches DLC3/DLC4-only types does it by Addressables GUID and by component/type *name*
   at runtime (the compile references predate those DLCs). That keeps one binary working whether or not
   the player owns a DLC; a survivor whose DLC is not owned is hidden (`SurvivorDef.requiredExpansion`).
