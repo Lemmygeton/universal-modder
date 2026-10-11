@@ -147,3 +147,11 @@ none rejected. Two (the `[DisallowMultipleComponent]` ones) were the same defect
   (guarded), `DamageReport.victimTeamIndex`, `CharacterBody.teamComponent`, `TeamComponent.teamIndex`,
   `QosChannelIndex.defaultReliable` (R2API.Core, built for the live game, uses `QosChannelIndex.chat`).
 - Verification: build 0 errors / 0 warnings; apicheck 0 broken.
+
+## 2026-10-11 — switched compile references to the live game (GameLibs 1.5.0-r.1)
+- nuget.bepinex.dev became reachable. `fetch_refs.py` now pulls RiskOfRain2.GameLibs 1.5.0-r.1 (live DLC4 build,
+  2026-10-09) and BepInEx.BaseLib 5.4.21 from it; the 1.3.1 + shim path is `--offline-fallback` only.
+- Why it matters: enum constants are compiled into our DLL. Against 1.3.1 they were stale: InterruptPriority gained
+  Taunt(4)/Immobilize(6) (Stun/Frozen/Vehicle/Death shifted), DamageSource is Hazard 0x10 / DOT 0x20 / Equipment 0x40
+  (the shim guessed differently), BodyFlags 0x4000 is IgnoreKnockup. Rebuilt everything against 1.5.0-r.1: 0 errors.
+- The Mithrix implementation run that had just started against the old refs was stopped and restarted.

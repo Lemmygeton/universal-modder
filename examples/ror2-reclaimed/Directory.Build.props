@@ -5,7 +5,7 @@
     RefsMode=Local     (default when refs/refs.json exists) reference the DLLs that tools/fetch_refs.py put in
                        refs/: nuget.org packages + the RefTools shim, or the user's own game + r2modman profile.
     RefsMode=Packages  standard community setup: PackageReference from nuget.org + nuget.bepinex.dev
-                       (BepInEx.Core, RiskOfRain2.GameLibs 1.4.1-r.0). See NuGet.config.
+                       (BepInEx.Core, RiskOfRain2.GameLibs 1.5.0-r.1). See NuGet.config.
   -->
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
@@ -36,7 +36,7 @@
 
   <ItemGroup Condition="'$(RefsMode)' == 'Packages'">
     <PackageReference Include="BepInEx.Core" Version="5.4.21" PrivateAssets="all" />
-    <PackageReference Include="RiskOfRain2.GameLibs" Version="1.4.1-r.0" PrivateAssets="all" />
+    <PackageReference Include="RiskOfRain2.GameLibs" Version="1.5.0-r.1" PrivateAssets="all" />
     <PackageReference Include="UnityEngine.Modules" Version="2021.3.33" PrivateAssets="all" IncludeAssets="compile" />
     <PackageReference Include="MMHOOK.RoR2" Version="2026.10.8" PrivateAssets="all" NoWarn="NU1701" />
     <PackageReference Include="RoR2BepInExPack" Version="1.45.0" PrivateAssets="all" />
