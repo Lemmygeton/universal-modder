@@ -1,0 +1,59 @@
+<Project>
+  <!--
+    Shared build settings for every Reclaimed project.
+
+    RefsMode=Local     (default when refs/refs.json exists) reference the DLLs that tools/fetch_refs.py put in
+                       refs/: nuget.org packages + the RefTools shim, or the user's own game + r2modman profile.
+    RefsMode=Packages  standard community setup: PackageReference from nuget.org + nuget.bepinex.dev
+                       (BepInEx.Core, RiskOfRain2.GameLibs 1.4.1-r.0). See NuGet.config.
+  -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DebugType>portable</DebugType>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+    <NoWarn>$(NoWarn);CS0649;CS0169;CS0414;CS0618;CS0436;NU1701;NU1603;MSB3277</NoWarn>
+    <ReclaimedRoot>$(MSBuildThisFileDirectory)</ReclaimedRoot>
+    <RefsDir Condition="'$(RefsDir)' == ''">$(ReclaimedRoot)refs/</RefsDir>
+    <RefsMode Condition="'$(RefsMode)' == '' And Exists('$(RefsDir)refs.json')">Local</RefsMode>
+    <RefsMode Condition="'$(RefsMode)' == ''">Packages</RefsMode>
+    <Version>0.1.0</Version>
+    <Authors>Reclaimed contributors</Authors>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(RefsMode)' == 'Local'">
+    <Reference Include="$(RefsDir)game/*.dll" Exclude="$(RefsDir)game/*.orig.dll" Private="false" />
+    <Reference Include="$(RefsDir)unity/*.dll" Private="false" />
+    <Reference Include="$(RefsDir)bepinex/BepInEx.dll;$(RefsDir)bepinex/0Harmony.dll;$(RefsDir)bepinex/MonoMod.RuntimeDetour.dll;$(RefsDir)bepinex/MonoMod.Utils.dll;$(RefsDir)bepinex/Mono.Cecil.dll;$(RefsDir)bepinex/RoR2BepInExPack.dll" Private="false" />
+    <Reference Include="$(RefsDir)mmhook/*.dll" Private="false" />
+    <Reference Include="$(RefsDir)r2api/*.dll" Private="false" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(RefsMode)' == 'Packages'">
+    <PackageReference Include="BepInEx.Core" Version="5.4.21" PrivateAssets="all" />
+    <PackageReference Include="RiskOfRain2.GameLibs" Version="1.4.1-r.0" PrivateAssets="all" />
+    <PackageReference Include="UnityEngine.Modules" Version="2021.3.33" PrivateAssets="all" IncludeAssets="compile" />
+    <PackageReference Include="MMHOOK.RoR2" Version="2026.10.8" PrivateAssets="all" NoWarn="NU1701" />
+    <PackageReference Include="RoR2BepInExPack" Version="1.45.0" PrivateAssets="all" />
+    <PackageReference Include="R2API.Core" Version="5.3.0" PrivateAssets="all" />
+    <PackageReference Include="R2API.Prefab" Version="1.1.1" PrivateAssets="all" />
+    <PackageReference Include="R2API.Language" Version="1.1.0" PrivateAssets="all" />
+    <PackageReference Include="R2API.Unlockable" Version="1.0.2" PrivateAssets="all" />
+    <PackageReference Include="R2API.Sound" Version="1.0.3" PrivateAssets="all" />
+    <PackageReference Include="R2API.DamageType" Version="1.1.7" PrivateAssets="all" />
+    <PackageReference Include="R2API.RecalculateStats" Version="1.6.6" PrivateAssets="all" />
+    <PackageReference Include="R2API.ContentManagement" Version="1.0.11" PrivateAssets="all" />
+    <PackageReference Include="R2API.Skins" Version="1.4.10" PrivateAssets="all" />
+    <PackageReference Include="R2API.Addressables" Version="1.1.3" PrivateAssets="all" />
+    <PackageReference Include="R2API.Networking" Version="1.0.4" PrivateAssets="all" />
+    <PackageReference Include="R2API.Dot" Version="1.1.2" PrivateAssets="all" />
+    <PackageReference Include="R2API.Orb" Version="1.0.1" PrivateAssets="all" />
+    <PackageReference Include="R2API.Deployable" Version="1.0.1" PrivateAssets="all" />
+    <PackageReference Include="R2API.Director" Version="3.1.1" PrivateAssets="all" />
+  </ItemGroup>
+</Project>

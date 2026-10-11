@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>Reclaimed.Core</AssemblyName>
+    <RootNamespace>Reclaimed</RootNamespace>
+  </PropertyGroup>
+</Project>

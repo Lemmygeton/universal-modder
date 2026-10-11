@@ -1,0 +1,6 @@
+refs/
+bin/
+obj/
+build/
+*.user
+.vs/
